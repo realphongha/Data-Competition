@@ -1,3 +1,4 @@
+import os
 import sys
 import argparse
 from pathlib import Path
@@ -63,6 +64,7 @@ def cal_weighted_ap(ap50):
 
 @torch.no_grad()
 def run(data,
+        data_dir,
         weights=None,  # model.pt path(s)
         batch_size=32,  # batch size
         img_size=640,  # inference size (pixels)
@@ -119,6 +121,11 @@ def run(data,
     num_class = int(data['num_class'])
     iou_thresholds = torch.linspace(0.5, 0.95, 10).to(device)  # iou vector for mAP@0.5:0.95
     num_thresholds = iou_thresholds.numel()
+    
+    if data_dir:
+        data["train"] = os.path.join(data_dir, "images/train")
+        data["val"] = os.path.join(data_dir, "images/val")
+        data["test"] = os.path.join(data_dir, "images/public_test")
 
     # Dataloader
     if not is_loaded_model:
@@ -266,6 +273,7 @@ def run(data,
 def parser():
     args = argparse.ArgumentParser(prog='val.py')
     args.add_argument('--data', type=str, default='config/data_cfg.yaml', help='dataset.yaml path')
+    args.add_argument('--data_dir', type=str, default='', help='path to dataset')
     args.add_argument('--weights', type=str, help='specify your weight path', required=True)
     args.add_argument('--task', help='train, val, test', required=True)
     args.add_argument('--name', help='save to project/name', required=True)
