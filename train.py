@@ -325,6 +325,7 @@ def train(hyp,
 
         if not no_val or final_epoch:  # Calculate mAP
             results, maps, _ = val.run(data_dict,
+                                       args.data_dir,
                                        batch_size=batch_size * 2,
                                        img_size=img_size,
                                        model=ema.ema,
