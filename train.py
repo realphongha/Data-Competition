@@ -385,6 +385,7 @@ def train(hyp,
 
 def parser(known=False):
     args = argparse.ArgumentParser()
+    args.add_argument('--weights', type=str, default="", help='initial weights path')
     args.add_argument('--data_cfg', type=str, default='config/data_cfg.yaml', help='dataset config file path')
     args.add_argument('--data_dir', type=str, default="", help='path to your dataset')
     args.add_argument('--batch-size', type=int, default=64, help='batch size')
@@ -393,6 +394,7 @@ def parser(known=False):
     args.add_argument('--workers', type=int, default=8, help='maximum number of dataloader workers')
     args.add_argument('--name', type=str, help='define your version experience', required=True)
     args.add_argument('--save_dir', type=str, default="", help='path to save your version experience')
+    args.add_argument('--resume', type=str, default="", help='checkpoint path to be resumed')
     args = args.parse_known_args()[0] if known else args.parse_args()
 
     with open(Path('config') / 'train_cfg.yaml') as f:
@@ -412,6 +414,14 @@ def main(args, callbacks=Callbacks()):
 
     set_logging()
     print(colorstr('Train: ') + ', '.join(f'{k}={v}' for k, v in vars(args).items()))
+    
+    if args.resume:  # resume an interrupted run
+        ckpt = args.resume
+        assert os.path.isfile(ckpt), 'ERROR: --resume checkpoint does not exist'
+        with open(Path(ckpt).parent.parent / 'opt.yaml') as f:
+            args = argparse.Namespace(**yaml.safe_load(f))  # replace
+        args.weights, args.resume = ckpt, True  # reinstate
+        LOGGER.info(f'Resuming training from {ckpt}')
 
     # Check requirements
     check_requirements(requirements=FILE.parent / 'requirements.txt', exclude=['thop'])
